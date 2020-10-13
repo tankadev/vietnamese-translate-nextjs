@@ -3,11 +3,11 @@
 
 Chào các bạn đến với tài liệu Next.js
 
-Nếu bạn là một người mới làm quen với Next.js thì bạn nên bắt đầu với [khoá học](https://nextjs.org/learn/basics/create-nextjs-app) này trước
+Nếu bạn là một người mới làm quen với Next.js, chúng tôi khuyên bạn nên bắt đầu với [khoá học](https://nextjs.org/learn/basics/create-nextjs-app) này trước
 
-Khoá học tương tác với các câu hỏi sẽ hướng dẫn bạn đi qua hết tất cả mọi thứ mà bạn cần để biết cách sử dụng Next.js
+Khoá học tương tác với các câu hỏi sẽ hướng dẫn bạn đi qua hết tất cả mọi thứ mà bạn cần, để biết cách sử dụng Next.js
 
-Nếu bạn có các câu hỏi về bất kì điều gì liên quan đến Next.js, bạn luôn được chào đón để trao đổi với cộng đồng của chúng tôi trên [Github Discussions](https://github.com/vercel/next.js/discussions)
+Nếu bạn có bất kì câu hỏi nào liên quan đến Next.js, bạn luôn được chào đón để trao đổi với cộng đồng của chúng tôi trên [Github Discussions](https://github.com/vercel/next.js/discussions)
 
 ### Yêu cầu hệ thống
 - [Node.js 10.13](https://nodejs.org/) hoặc sau đó
@@ -22,7 +22,9 @@ npx create-next-app
 yarn create next-app
 ```
 
-Sau khi cài đặt hoàn tất, làm theo hướng dẫn để khởi động **development server**. Hãy thử chỉnh sửa `pages/index.js` và nhìn kết quả trên trình duyệt của bạn.
+Sau khi cài đặt hoàn tất, làm theo hướng dẫn để khởi động **development server**. Hãy thử chỉnh sửa `pages/index.js` và xem kết quả trên trình duyệt của bạn.
+
+Để biết thêm thông tin về cách sử dụng `create-next-app`, bạn có thể xem lại [tài liệu `create-next-app`](https://nextjs.org/docs/api-reference/create-next-app)
 
 ## Cài đặt thủ công
 Cài đặt `next`, `react` và `react-dom` trong project của bạn:
@@ -48,9 +50,9 @@ Các lệnh này sẽ đề cập đến những giai đoạn khác nhau của v
 - `build` - Chạy `next build` sẽ build ứng dụng chế độ production
 - `start` - Chaỵ `next start` sẽ khởi động Next.js production server
 
-Next.js được xay dựng xung quanh khái niệm của [pages](https://nextjs.org/docs/basic-features/pages). Page là [React Component](https://reactjs.org/docs/components-and-props.html) được export từ `.js`, `.jsx`, `.ts`, hoặc `.tsx` file trong thư mục `pages`. 
+Next.js được xây dựng dựa trên khái niệm về [pages](https://nextjs.org/docs/basic-features/pages). Page là [React Component](https://reactjs.org/docs/components-and-props.html) được export từ `.js`, `.jsx`, `.ts`, hoặc `.tsx` file trong thư mục `pages`. 
 
-Pages được liên kết với route dựa trên tên file. Ví dụ `pages/about.js` được ánh xạ tới đường dẫn `/about`. Thâm chí bạn có thể thêm những tham số cho dynamic route với tên file.
+Pages được liên kết với route dựa trên tên file. Ví dụ `pages/about.js` được ánh xạ tới đường dẫn `/about`. Thậm chí bạn có thể thêm những tham số động cho route với tên file.
 
 Tạo thư mục `pages` bên trong project.
 
@@ -64,21 +66,21 @@ function HomePage() {
 export default HomePage
 ```
 
-Khởi động môi trường development bằng cách chạy lệnh `npm run dev` hoặc `yarn dev`. Development server sẽ chạy trên đường dẫn `http://localhost:3000`.
+Để khởi động môi trường development, hãy chạy lệnh `npm run dev` hoặc `yarn dev`. Development server sẽ chạy trên đường dẫn `http://localhost:3000`.
 
 Bạn hãy truy cập vào `http://localhost:3000` để xem ứng dụng của bạn.
 
 Cho đến thời điểm hiện tại, chúng tôi đã có:
-- Tự động compilation and bundling (với webpack và babel)
+- Tự động compilation(biên dịch) and bundling(đóng gói) (với webpack và babel)
 - [React Fast Refresh](https://nextjs.org/blog/next-9-4#fast-refresh)
 - [Static generation and server-side rendering](https://nextjs.org/docs/basic-features/data-fetching) của [`./pages/`](https://nextjs.org/docs/basic-features/pages)
 - [Static file serving.](https://nextjs.org/docs/basic-features/static-file-serving) `./public/` được ánh xạ tới `/`
 
-Ngoài ra, bất kỳ ứng dụng Next,js nào cũng đã sẵn sàng cho production khi bắt đầu, đọc thêm thông tin về [tài liệu Deployment](https://nextjs.org/docs/deployment).
+Ngoài ra, bất kỳ ứng dụng Next,js nào cũng đã sẵn sàng cho production ngay từ đầu, đọc thêm thông tin về [tài liệu Deployment](https://nextjs.org/docs/deployment).
 
 ## Liên quan
 
-Thông về những gì sẽ được hướng dẫn tiếp theo, chúng tôi gợi ý theo dõi những phần bên dưới:
+Để biết thêm thông tin về những gì cần làm tiếp theo, chúng tôi đề xuất theo dõi những phần bên dưới:
 
 - [Pages](https://nextjs.org/docs/basic-features/pages), tìm hiểu thêm Pages là gì trong Next.js
 - [Hỗ trợ CSS](https://nextjs.org/docs/basic-features/built-in-css-support), sử dụng hỗ trợ CSS đã được tích hợp sẵn để thêm các style tuỳ chỉnh trong ứng dụng của bạn.
