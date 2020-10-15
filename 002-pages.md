@@ -38,7 +38,7 @@ Next.js có hai hình thức của pre-rendering: **Static Generation** và **S
 
 Quan trọng, Next.js cho phép bạn **lựa chọn** hình thức pre-rendering nào mà bạn thích sử dụng cho mỗi trang. Bạn có thể tạo ra ứng dụng Next.js "hybrid" bằng cách sử dụng Static Generation cho hầu hết các trang và sử dụng Server-side Rendering cho những trang khác.
 
-Chúng tôi **khuyên** bạn nên sử dụng **Static Generation** over Server-side Rendering cho những lý do về hiệu năng. Những trang tỉnh được tạo ra có thể được cache bởi CDN mà không cần phải cấu hình thêm, để tăng hiệu năng. Tuy nhiên, trong một số trường hợp, Server-side Rendering có thể là lựa chọn duy nhất.
+Chúng tôi **khuyên** bạn nên sử dụng **Static Generation** trên Server-side Rendering cho những lý do về hiệu năng. Những trang tỉnh được tạo ra có thể được cache bởi CDN mà không cần phải cấu hình thêm, để tăng hiệu năng. Tuy nhiên, trong một số trường hợp, Server-side Rendering có thể là lựa chọn duy nhất.
 
 Bạn cũng có thể sử dụng **Client-side Rendering** cùng với Static Generation hoặc Server-side Rendering. Điều này có nghĩa là một số phần của trang có thể được render toàn bộ bởi client side Javascript. Để tìm hiểu thêm, hãy xem qua tài liệu [Data Fetching](https://github.com/vercel/next.js/blob/canary/docs/basic-features/data-fetching.md#fetching-data-on-the-client-side).
 
@@ -136,3 +136,147 @@ export default Blog
 ```
 
 Để tìm hiểu thêm về cách mà `getStaticProps` hoạt động, xem thêm tài liệu [Data Fetching](https://github.com/vercel/next.js/blob/canary/docs/basic-features/data-fetching.md#getstaticprops-static-generation)
+
+#### Kịch bản 2: Đường dẫn trang của bạn phụ thuộc vào dữ liệu bên ngoài
+
+Next.js cho phép bạn tạo ra các trang với **dynamic routes**. Ví dụ, bạn tạo một file có tên là `pages/posts/[id].js` để hiển thị một bài post dựa trên `id`. Điều này cho phép bạn hiển thị bài blog với `id: 1` khi bạn truy cập vào đường dẫn `posts/1`.
+
+> Để tìm hiểu thêm về dynamic routing, xem thêm tài liệu [Dynamic Routing](https://github.com/vercel/next.js/blob/canary/docs/routing/dynamic-routes.md).
+
+Tuy nhiên, `id` mà bạn muốn pre-render tại build time có thể phụ thuộc vào dữ liệu bên ngoài.
+
+**Ví dụ**: Giả sử bạn chỉ mới thêm một bài blog (với `id: 1`) vào database. Trong trường hợp này, bạn chỉ muốn pre-render `posts/1` tại build time.
+
+Sau đó, bạn có thể muốn thêm một bài blog thứ hai với `id: 2`. Sau đó bạn cũng muốn pre-render `posts/2`.
+
+Vì thế những **đường dẫn** trang của bạn được pre-render sẽ phụ thuộc vào dữ liệu bên ngoài. Để xử lý vấn đề này, Next.js cho phép bạn `export` một `async` function được gọi là `getStaticPaths` từ trang động (trong trường hợp này là `pages/posts/[id].js`). Function này được gọi tại build time và cho phép bạn xác định được những đường dẫn nào mà bạn muốn pre-render.
+
+```jsx
+// Fucntion này được gọi tại build time
+export async function getStaticPaths() {
+  // Gọi API bên ngoài để lấy dữ liệu danh sách bài post
+  const res = await fetch('https://.../posts')
+  const posts = await res.json()
+
+  // Lấy danh sách những đường dẫn chúng ta muốn pre-render dựa trên danh sách bài post
+  const paths = posts.map((post) => `/posts/${post.id}`)
+
+  // Chúng ta sẽ chỉ pre-render những đường dẫn này tại build time.
+  // { fallback: false } có nghĩa là những route khác sẽ là 404 (không tìm thấy).
+  return { paths, fallback: false }
+}
+```
+
+Cũng trong `pages/posts/[id].js`, bạn cần export `getStaticProps` vì bạn lấy dữ liệu về bài blog với `id` của nó và sử dụng nó để pre-render trang:
+
+```jsx
+function Post({ post }) {
+  // Render post...
+}
+
+export async function getStaticPaths() {
+  // ...
+}
+
+// Function này cũng được gọi tại build time
+export async function getStaticProps({ params }) {
+  // params chứa `id` cùa bài blog.
+  // Nếu đường dẫn là /posts/1, sau đó params.id sẽ là 1
+  const res = await fetch(`https://.../posts/${params.id}`)
+  const post = await res.json()
+
+  // Truyền dữ liệu của bài blog vào trang thông qua props
+  return { props: { post } }
+}
+
+export default Post
+```
+
+Để tìm hiểu thêm về cách `getStaticPaths` làm việc như thế nào, xem qua tài liệu [Data Fetching](https://github.com/vercel/next.js/blob/canary/docs/basic-features/data-fetching.md#getstaticpaths-static-generation) 
+
+### Khi nào nên sử dụng Static Generation?
+
+Chúng tôi khuyện bạn sử dụng **Static Generation** (có và không có dữ liệu) bất cứ khi nào có thể bởi vì trang của bạn có thể build một lần và được cung cấp bởi CDN, điều này làm cho trang của bạn nhanh hơn nhiều, hơn là để sever phải render trang trên mỗi request.
+
+Bạn có thể sử dụng Static Generation cho nhiều loại trang, bao gồm:
+- Những trang marketing
+- Blog posts
+- Danh sách sản phẩm trên trang thương mại điện tử (E-commerce)
+- Hỗ trợ và tài liệu
+
+Bạn nên tự hỏi bản thân: "Tôi có thể pre-render trang này **trước** request của người dùng không ?" Nếu câu trả lời là có, thì bạn nên lựa chọn Static Generation.
+
+Mặt khác, Static Generation **không** phải là một ý kiến tốt nếu bạn không thể pre-render trang trước request người dùng. Có thể trang của bạn hiển thị dữ liệu được cập nhật thường xuyên, và nội dung trang thay đổi trên mỗi request.
+
+Trong những trường hợp giống vậy, bạn có thể làm theo một trong số điều sau đây:
+- Sử dụng Static Generation với **Client-side Rendering**: Bạn có thể bỏ qua pre-rendering một số phần của trang sau đó sử dụng client-side JavaScript để populate chúng. Để tìm hiểu thêm về cách tiếp cận này, xem thểm tài liệu [Data Fetching](https://github.com/vercel/next.js/blob/canary/docs/basic-features/data-fetching.md#fetching-data-on-the-client-side).
+- Sử dụng **Server-Side Rendering**: Next.js pre-render trang trên mỗi request. Nó sẽ chậm hơn bởi vì trang không thể cache bằng CDN, nhưng pre-render trang sẽ luôn luôn được cập nhật. Chúng ta sẽ nói về cách tiếp cận này bên dưới.
+
+## Server-side Rendering
+
+> Còn được gọi là "SSR" hoặc "Dynamic Rendering".
+
+Nếu trang sử dụng **Server-side Rendering**, thì trang HTML sẽ được tạo ra trên mỗi request.
+
+Để sử dụng Server-side Rendering cho trang, bạn cần `export` một `async` function được gọi là `getServerSideProps`. Function này sẽ được gọi bởi server trên mỗi request.
+
+Ví dụ, giả sử rằng trang của bạn cần pre-render để cập nhật dữ liệu thường xuyên (lấy dữ liệu từ API bên ngoài). Bạn có thể viết `getServerSideProps` để lấy dữ liệu này và truyền nó tới `Page` như bên dưới:
+
+```jsx
+function Page({ data }) {
+  // Render data...
+}
+
+// Function này sẽ được gọi trên mỗi request
+export async function getServerSideProps() {
+  // Lấy dữ liệu từ API bên ngoài
+  const res = await fetch(`https://.../data`)
+  const data = await res.json()
+
+  // Truyền dữ liệu tới page thông qua props
+  return { props: { data } }
+}
+
+export default Page
+```
+
+Như bạn đã thấy, `getServerSideProps` giống với `getStaticProps`, nhưng điểm khác nhau là `getServerSideProps` thì chạy trên mỗi request thay vì tại build time.
+
+Để tìm hiểu thêm về `getServerSideProps` làm việc như thế nào, xem thêm tài liệu [Data Fetching](https://github.com/vercel/next.js/blob/canary/docs/basic-features/data-fetching.md#getserversideprops-server-side-rendering).
+
+## Tóm tắt
+Chúng ta đã thảo luận hai hình thức pre-rendering của Next.js.
+- **Static Generation** (Được đề xuất): HTML được tạo tại thời điểm build time và sẽ được sử dụng lại trên mỗi request. Để tạo một trang sử dụng Static Generation, có thể export page component hoặc export `getStaticProps` (và `getStaticPaths` nếu cần). Thật tuyệt vời cho các trang có thể hiển thị trước request của người dùng. Bạn cũng có thể sử dụng nó với Client-side Rendering để thêm dữ liệu bổ sung.
+- **Server-side Rendering**: HTML được tạo ra trên **mỗi request**. Để tạo một trang sử dụng Server-side Rendering, export `getServerSideProps`. Bởi vì kết quả của Server-side Rendering có hiệu năng thấp hơn là Static Generation, vậy nên chỉ sử dụng cách này nếu thật sự cần thiết.
+
+## Tìm hiểu thêm
+
+Chúng tôi khuyên bạn đọc qua các phần tiếp theo:
+
+<div class="card">
+  <a href="/docs/basic-features/data-fetching.md">
+    <b>Data Fetching:</b>
+    <small>Tìm hiểu thêm về cách lấy dữ liệu trong Next.js.</small>
+  </a>
+</div>
+
+<div class="card">
+  <a href="/docs/advanced-features/preview-mode.md">
+    <b>Preview Mode:</b>
+    <small>Tìm hiểu thêm về chế độ xem trước trong Next.js.</small>
+  </a>
+</div>
+
+<div class="card">
+  <a href="/docs/routing/introduction.md">
+    <b>Routing:</b>
+    <small>Tìm hiểu thêm về điều hướng trong Next.js.</small>
+  </a>
+</div>
+
+<div class="card">
+  <a href="/docs/basic-features/typescript.md#pages">
+    <b>TypeScript:</b>
+    <small>Thêm Typescript vào trang của bạn.</small>
+  </a>
+</div>
