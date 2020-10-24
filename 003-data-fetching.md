@@ -52,5 +52,58 @@ Tham số `context` là một đối tượng chứa các keys sau:
 - `previewData` chứa tập dữ liệu xem trước bởi `setPreviewData`. Xem tài liệu [Preview Mode](https://github.com/vercel/next.js/blob/canary/docs/advanced-features/preview-mode.md).
 
 `getStaticProps` sẽ trả về một đối tượng với:
-- `props` - Một đối tượng **bắt buộc** với props mà sẽ được nhận bởi page component. Nó phải là [serializable object](https://en.wikipedia.org/wiki/Serialization)
+- `props` - Một đối tượng **bắt buộc** với props mà sẽ được nhận bởi page component. Nó nên là một [serializable object](https://en.wikipedia.org/wiki/Serialization)
 - `revalidate` - Một số **tuỳ chọn** đếm bằng giây sau khi mà trang re-generation có thể xảy ra. Thông tin thêm [Incremental Static Regeneration](https://github.com/vercel/next.js/blob/canary/docs/basic-features/data-fetching.md#incremental-static-regeneration)
+
+> Ghi chú: Bạn có thể import modules in top-level scope để sử dụng trong `getStaticProps`. Import sử dụng trong `getStaticProps` sẽ [không được bunble cho client-side](https://nextjs.org/docs/basic-features/data-fetching#write-server-side-code-directly). 
+
+> Điều này có nghĩa là bạn có thể viết **server-side code trực tiếp trong `getStaticProps`**. Bao gồm đọc từ file hệ thống hoặc database.
+
+> Bạn không nên sử dụng `fetch()` để gọi API trong ứng dụng của bạn. Thay vào đó, trực tiếp import API và gọi function của nó. Bạn có thể cần một chút refactor code của bạn cho cách tiếp cận này.
+
+> Lấy dữ liệu từ API bên ngoài là tốt!
+
+### Ví dụ đơn giản
+
+Đây là ví dụ mà sử dụng `getStaticProps` để lấy danh sách blog post từ một CMS(content management system). Ví dụ này cũng có trong [tài liệu Pages](https://github.com/vercel/next.js/blob/canary/docs/basic-features/pages.md).
+
+```jsx
+// posts sẽ được đưa vào tại build time bởi getStaticProps()
+function Blog({ posts }) {
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+
+// Function này sẽ được gọi tại build time trên server-side.
+// Nó sẽ không được gọi trên client-side, vì vậy thập chí bạn có thể viết
+// truy vấn trực tiếp tới database. Xem phần "Technical details".
+export async function getStaticProps() {
+  // Gọi một API bên ngoài để lấy danh sách post.
+  // Bạn có thể sử dụng bất kỳ thư viện nào để lấy dữ liệu
+  const res = await fetch('https://.../posts')
+  const posts = await res.json()
+
+  // Trả về { props: posts }, the Blog component
+  // sẽ nhận `posts` như là một prop tại build time
+  return {
+    props: {
+      posts,
+    },
+  }
+}
+
+export default Blog
+```
+
+### Khi nào tôi nên sử dụng `getStaticProps`?
+
+Bạn nên sử dụng `getStaticProps` nếu:
+- Dữ liệu cần thiết để hiển thị trang có sẵn tại build time trước yêu cầu của người dùng.
+- Dữ liệu đến từ một headless CMS.
+- Dữ liệu có thể công khai.
+- Trang phải pre-render (cho SEO) và rất nhanh - `getStaticProps` tạo HTML và JSON, cả hai đều có thể được CDN lưu vào cache để tăng hiệu năng.
